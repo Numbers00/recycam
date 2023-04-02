@@ -57,7 +57,7 @@ for i, ul in enumerate(soup.select('ul[id^="page-section-rows"]'), 1):
     print(f'Processing page {i}...')
     for li in ul.find_all('li', {'class': 'page-row'}):
         # Extract the name and URL of the item
-        item_name = li.find('a').string.strip()
+        item_name = li.find('a').text.strip()
         item_url = li.find('a')['href']
         
         print(f'Processing item {item_name} at {item_url}...')
@@ -71,6 +71,7 @@ for i, ul in enumerate(soup.select('ul[id^="page-section-rows"]'), 1):
         item_soup = BeautifulSoup(item_response.content, 'html.parser')
 
         # Extract the option divs
+        print('item_soup', item_soup)
         option_divs = item_soup.find_all('div', {'class': 'card page-section'})
         best_option_div, other_option_divs = option_divs[0], option_divs[1:]
 

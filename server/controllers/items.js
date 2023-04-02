@@ -13,7 +13,7 @@ ItemsRouter.get('/:id', async (req, res, next) => {
 
   const item = Item.findById(id);
   if (!item)
-    return res.status(404).send({ success: false, message: 'User not found' });
+    return res.status(404).send({ success: false, message: `Item with id: ${id} not found` });
 
   return res.send(item);
 });

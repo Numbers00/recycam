@@ -68,156 +68,78 @@ const _removeMinMax = (str) => {
   return str.replace(/[mM]in/, '').replace(/[mM]ax/, '');
 };
 
-const filterResults = (model) => {
-  return (req, res, next) => {
-    // eslint-disable-next-line no-unused-vars
-    const { page, limit, sortKey, sortType, ...options } = req.query;
+const queryResults = (model) => {
+  return async (req, res, next) => {
+    const { page, limit, sortKey = '_id', sortType = 'asc', ...options } = req.query;
 
-    // filtering the model
-    const filteredModel = model.filter((item) => {
-      let result = true;
-      for (const key in options) {
-        if (!Object.keys(item).includes(_removeMinMax(key)))
-          continue;
+    const sort = { [sortKey]: sortType === 'desc' ? -1 : 1 };
 
-        if (options[key] === '' || options[key] === 'undefined' || options[key] === 'null')
-          continue;
-
-        if (key.toLowerCase().includes('date')) {
-          const numDash = (options[key].match(/-/g) || []).length;
-          const dateFilterMode = (() => {
-            switch (numDash) {
-            case 0:
-              return 'year';
-            case 1:
-              return 'month';
-            case 2:
-              return 'date';
-            default:
-              return 'date';
-            }
-          })();
-
-          // startOf autoformats date
-          // e.g., 2014 -> 2014-01-01
-          const dateFilter = moment(options[key]).startOf(dateFilterMode);
-          const filteredDate = moment(item[_removeMinMax(key)]);
-          let condition = false;
-          if (key.toLowerCase().includes('min'))
-            condition = filteredDate.isAfter(dateFilter);
-          else if (key.toLowerCase().includes('max'))
-            condition = filteredDate.isBefore(dateFilter);
-          else
-            condition = filteredDate.isSame(dateFilter, 'date');
-          if (!condition) {
-            result = false;
-            break;
-          }
-        } else if (/^\d[\d.]*$/.test(options[key]) && [0, 1].includes((options[key].match('.') || []).length)) {
-          // option is either an integer or a decimal value
-          if (item[key] !== parseFloat(options[key])) {
-            result = false;
-            break;
-          }
-        } else {
-          // option is either a string or a boolean
-          const formattedFilter = (() => {
-            switch (options[key]) {
-            case 'true':
-            case 'True':
-              return true;
-            case 'false':
-            case 'False':
-              return false;
-            default:
-              return options[key];
-            }
-          })();
-          if (item[key] !== formattedFilter) {
-            result = false;
-            break;
-          }
-        }
+    // Build the query based on the filter options
+    const query = {};
+    for (const key in options) {
+      if (key === 'q') {
+        query.$text = { $search: options[key] };
+      } else if (key.endsWith('_min')) {
+        query[key.slice(0, -4)] = { $gte: options[key] };
+      } else if (key.endsWith('_max')) {
+        query[key.slice(0, -4)] = { $lte: options[key] };
+      } else if (key.endsWith('_in')) {
+        query[key.slice(0, -3)] = { $in: options[key].split(',') };
+      } else {
+        query[key] = options[key];
       }
-      return result;
-    });
+    }
 
-    res.filteredResults = filteredModel;
-    next();
-  };
-};
+    // Retrieve the filtered data from the database
+    let filteredModel;
+    let total;
 
-const sortResults = () => {
-  return (req, res, next) => {
-    const { sortKey, sortType } = req.query;
-    if (!(sortKey || sortType)) {
-      res.sortedResults = res.filteredResults;
+    if (page && limit) {
+      filteredModel = await model
+        .find(query)
+        .sort(sort)
+        .skip((page - 1) * limit)
+        .limit(Number(limit))
+        .lean();
+
+      total = await model.countDocuments(query);
+    } else {
+      filteredModel = await model
+        .find(query)
+        .sort(sort)
+        .lean();
+
+      total = filteredModel.length;
+    }
+
+    const results = {};
+    if (!page || !limit) {
+      res.queryResults = filteredModel;
       return next();
     }
 
-    const capSortKey = _capitalizeFirstLetter(sortKey);
-    res.filteredResults = res.filteredResults.map((item) => {
-      return {
-        ...item,
-        [`DateFormat${capSortKey}`]: new Date(item[sortKey])
-      };
-    });
-    const sortedResults = (() => {
-      switch (sortType) {
-      case 'A to Z':
-        return _.orderBy(res.filteredResults, [`dateFormat${capSortKey}`], ['asc']);
-      case 'Z to A':
-        return _.orderBy(res.filteredResults, [`dateFormat${capSortKey}`], ['desc']);
-      case 'Latest to Oldest':
-        return _.orderBy(res.filteredResults, [`dateFormat${capSortKey}`], ['desc']);
-      case 'Oldest to Latest':
-        return _.orderBy(res.filteredResults, [`dateFormat${capSortKey}`], ['asc']);
-      default:
-        return res.filteredResults;
-      }
-    })();
-
-    res.sortedResults = sortedResults;
-    next();
-  };
-};
-
-// code adapted from and thanks to https://www.javacodegeeks.com/how-to-do-pagination-in-node-js.html
-const paginateResults = () => {
-  // middleware function
-  return (req, res, next) => {
-    const page = parseInt(req.query.page || 1);
-    const limit = parseInt(req.query.limit || 32);
-
-    const sortedModel = res.sortedResults;
-
-    // calculating the starting and ending index
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-
-    const results = {};
-    if (endIndex < sortedModel.length) {
-      results.next = {
-        page: page + 1,
-        limit: limit
-      };
-    }
-
-    if (startIndex > 0) {
+    if ((page - 1) * limit > 0) {
       results.previous = {
         page: page - 1,
-        limit: limit
+        limit: limit,
       };
     }
 
-    results.total = sortedModel.length;
-    results.results = sortedModel.slice(startIndex, endIndex);
+    if (page * limit < total) {
+      results.next = {
+        page: page + 1,
+        limit: limit,
+      };
+    }
 
-    res.paginatedResults = results;
+    results.total = total;
+    results.results = filteredModel;
+
+    res.queryResults = results;
     next();
   };
 };
-// end adapted code
+
 
 const multer = require('multer');
 const storage = multer.diskStorage({
@@ -276,9 +198,7 @@ module.exports = {
   tokenExtractor,
   userExtractor,
   nonBlockingUserExtractor,
-  filterResults,
-  sortResults,
-  paginateResults,
+  queryResults,
   upload,
   requestLogger,
   unknownEndpoint,

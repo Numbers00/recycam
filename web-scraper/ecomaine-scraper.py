@@ -7,22 +7,50 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 
 
+def retry(func, max_attempts=5, sleep_time=5):
+    for attempt in range(1, max_attempts+1):
+        try:
+            result = func()
+            return result
+        except:
+            if attempt == max_attempts:
+                raise
+            else:
+                time.sleep(sleep_time)
+                print(f'Retrying {func.__name__}...')
+
+
 # Set up the webdriver
-driver = webdriver.Chrome()
-wait = WebDriverWait(driver, 30)
+def init_driver():
+    return webdriver.Chrome()
+
+
+driver = retry(init_driver)
 
 # Navigate to the page
-url = 'https://www.ecomaine.org/what-can-be-recycled/recyclopedia/#!rc-cpage=wizard_material_list'
-driver.get(url)
+def navigate():
+    url = 'https://www.ecomaine.org/what-can-be-recycled/recyclopedia/#!rc-cpage=wizard_material_list'
+    driver.get(url)
+    wait = WebDriverWait(driver, 30)
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'ul[id^="page-section-rows"]')))
 
-# Wait for the content to fully load
-wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'ul[id^="page-section-rows"]')))
+
+retry(navigate)
 
 # Extract the data using BeautifulSoup
-soup = BeautifulSoup(driver.page_source, 'html.parser')
+def extract_data():
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    return soup
+
+
+soup = retry(extract_data)
 
 # Close the webdriver
-driver.quit()
+def close_driver():
+    driver.quit()
+
+
+retry(close_driver)
 
 items = []
 for i, ul in enumerate(soup.select('ul[id^="page-section-rows"]'), 1):
@@ -35,7 +63,10 @@ for i, ul in enumerate(soup.select('ul[id^="page-section-rows"]'), 1):
         print(f'Processing item {item_name} at {item_url}...')
 
         # Make a request to the item URL
-        item_response = requests.get(item_url)
+        def get_item_response():
+            return requests.get(item_url)
+
+        item_response = retry(get_item_response)
         time.sleep(5)
         item_soup = BeautifulSoup(item_response.content, 'html.parser')
 
@@ -64,14 +95,14 @@ for i, ul in enumerate(soup.select('ul[id^="page-section-rows"]'), 1):
                 'option_description': option_description
             })
 
-        # Append the item information to the list of items
-        items.append({
-            'item_name': item_name,
-            'item_url': item_url,
-            'best_option_name': best_option_name,
-            'best_option_description': best_option_description,
-            'other_options': other_options
-        })
+            # Append the item information to the list of items
+            items.append({
+                'item_name': item_name,
+                'item_url': item_url,
+                'best_option_name': best_option_name,
+                'best_option_description': best_option_description,
+                'other_options': other_options
+            })
 
 for item in items:
     print(item)

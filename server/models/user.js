@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema({
   likedOptions: {
     type: [mongoose.Schema.Types.ObjectId],
     ref: 'Option'
+  },
+  dislikedOptions: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: 'Option'
   }
 });
 

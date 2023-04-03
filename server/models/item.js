@@ -7,7 +7,8 @@ const itemSchema = new mongoose.Schema({
     required: 'the item\'s name is required'
   },
   options: {
-    type: [optionSchema]
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: 'Option'
   }
 });
 

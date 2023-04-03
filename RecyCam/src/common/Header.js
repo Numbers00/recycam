@@ -19,9 +19,8 @@ const LeftIcon = ({ currRouteName }) => {
 };
 
 
-const Header = () => {
-  const route = useRoute();
-  const currRouteName = route.name;
+const Header = (props) => {
+  const { currRouteName } = props;
 
   const visibleOnPages = ['Profile', 'Database'];
   if (!visibleOnPages.includes(currRouteName))

@@ -21,11 +21,20 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.numbers00.RecyCam"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "jsEngine": "hermes"
+    "jsEngine": "hermes",
+    "extra": {
+      "eas": {
+        "projectId": "4a13133b-371e-47e1-8767-ae28210edf10"
+      }
+    },
+    "http": {
+      "requestTimeout": 15000
+    }
   }
 }

@@ -40,7 +40,7 @@ const App = () => {
       try {
         // Pre-load fonts, make any API calls you need to do here
         await Font.loadAsync({
-          'Roboto': require('./assets/fonts/Roboto/Roboto-Regular.ttf'),
+          'Roboto': require('./assets/fonts/Roboto/Roboto-Medium.ttf'),
         });
         // Artificially delay for two seconds to simulate a slow loading
         // experience. Please remove this if you copy and paste the code!

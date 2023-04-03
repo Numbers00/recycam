@@ -88,6 +88,21 @@ export const Label = styled.Text`
   font-size: 16px;
   margin-bottom: 8px;
 `;
+
+export const ScreenContents1 = styled.ScrollView`
+  position: relative;
+  bottom: 24px;
+  z-index: 2;
+  min-height: ${window.height - 240 + 24}px;
+  max-height: ${window.height - 240 + 24}px;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 50px;
+`;
+
 export const globalStyles = StyleSheet.create({
   circleContainer: {
     width: 24,

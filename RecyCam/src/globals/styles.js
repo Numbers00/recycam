@@ -12,41 +12,69 @@ import {
 } from 'react-native';
 import styled from 'styled-components/native';
 
-export const borderGray ='#CED4DA';
+export const blueGreen = '#0096C7';
+export const columbiaBlue = '#BFD7EA';
 export const danger = '#DC3545';
-export const darkgreen = '#2C6E49';
-export const green = '#4C956C';
-export const lightpink = '#FFC9B9';
-export const lightyellow = '#FEFEE3';
-export const orange = '#FD7E14';
 export const primary = '#0D6EFD';
-export const purple = '#6F42C1';
 export const secondary = '#6C757D';
+export const success = '#198754';
+export const vividSkyBlue = '#48CAE4';
 
 export const window = Dimensions.get('window');
 
-export const BText = styled.Text`
+export const Text1 = styled.Text`
+  font-size: 12px;
+`;
+
+export const Text2 = styled.Text`
   font-size: 14px;
+`;
+
+export const BText1 = styled(Text1)`
   color: black;
 `;
 
-export const DText = styled.Text`
-  font-size: 14px;
+export const BText2 = styled(Text2)`
+  color: black;
+`;
+
+export const BGText1 = styled(Text1)`
+  color: ${blueGreen};
+`;
+
+export const BGText2 = styled(Text2)`
+  color: ${blueGreen};
+`;
+
+export const DText1 = styled(Text1)`
   color: ${danger};
 `;
 
-export const PText = styled.Text`
-  font-size: 14px;
+export const DText2 = styled(Text2)`
+  color: ${danger};
+`;
+
+export const PText1 = styled(Text1)`
   color: ${primary};
 `;
 
-export const SText = styled.Text`
-  font-size: 14px;
+export const PText2 = styled(Text2)`
+  color: ${primary};
+`;
+
+export const SText1 = styled(Text1)`
   color: ${secondary};
 `;
 
-export const WText = styled.Text`
-  font-size: 14px;
+export const SText2 = styled(Text2)`
+  color: ${secondary};
+`;
+
+export const WText1 = styled(Text1)`
+  color: white;
+`;
+
+export const WText2 = styled(Text2)`
   color: white;
 `;
 

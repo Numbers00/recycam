@@ -19,6 +19,7 @@ import {
   View
 } from 'react-native';
 
+import Footer from './src/common/Footer.js';
 import Header from './src/common/Header.js';
 
 import Record from './src/screens/Record.js';
@@ -114,7 +115,9 @@ const App = () => {
             initialParams={{ currRouteName }}
           />
         </Tab.Navigator>
+        <Footer currRouteName={currRouteName} />
       </SafeAreaView>
+      <StatusBar hidden />
     </NavigationContainer>
   );
 }

@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
-import { WText } from '../globals/styles.js';
+import { WText2 } from '../globals/styles.js';
 
 const LeftIcon = ({ currRouteName }) => {
   if (currRouteName === 'Profile')
@@ -30,7 +30,7 @@ const Header = (props) => {
   return (
     <View style={styles.topBar}>
       <LeftIcon currRouteName={currRouteName} />
-      <WText>{currRouteName}</WText>
+      <WText2>{currRouteName}</WText2>
     </View>
   );
 };

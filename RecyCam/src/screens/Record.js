@@ -267,14 +267,14 @@ const styles = StyleSheet.create({
     position: 'relative',
     zIndex: 1,
     width: '100%',
-    height: 240
+    height: 300
   },
   videoPlaceholder: {
     position: 'relative',
     zIndex: 1,
     backgroundColor: 'gray',
     width: '100%',
-    height: 240,
+    height: 300,
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',

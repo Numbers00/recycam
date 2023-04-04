@@ -22,6 +22,7 @@ import {
 import Footer from './src/common/Footer.js';
 import Header from './src/common/Header.js';
 
+import Profile from './src/screens/Profile.js';
 import Record from './src/screens/Record.js';
 
 SplashScreen.preventAutoHideAsync();
@@ -112,6 +113,11 @@ const App = () => {
           <Tab.Screen
             name='Record'
             component={Record}
+            initialParams={{ currRouteName }}
+          />
+          <Tab.Screen
+            name='Profile'
+            component={Profile}
             initialParams={{ currRouteName }}
           />
         </Tab.Navigator>

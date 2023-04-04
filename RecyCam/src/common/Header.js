@@ -7,7 +7,10 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
-import { WText2 } from '../globals/styles.js';
+import {
+  blueGreen,
+  WText2
+} from '../globals/styles.js';
 
 const LeftIcon = ({ currRouteName }) => {
   if (currRouteName === 'Profile')
@@ -42,7 +45,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: '100%',
     height: 32,
-    backgroundColor: 'transparent',
+    backgroundColor: blueGreen,
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',

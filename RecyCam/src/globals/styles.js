@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import styled from 'styled-components/native';
 
+// Colors
 export const blueGreen = '#0096C7';
 export const columbiaBlue = '#BFD7EA';
 export const danger = '#DC3545';
@@ -20,6 +21,8 @@ export const vividSkyBlue = '#48CAE4';
 
 export const window = Dimensions.get('window');
 
+
+// Text Components
 export const Text1 = styled.Text`
   font-size: 12px;
 `;
@@ -76,6 +79,19 @@ export const WText2 = styled(Text2)`
   color: white;
 `;
 
+// View Components
+export const FeatureModal = styled.View`
+  border-radius: 16px;
+  background-color: white;
+  width: ${window.width - 64}px;
+  height: ${window.width - 64}px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 32px;
+`;
+
 export const FormikGroup = styled.View`
   width: 100%;
   display: flex;
@@ -91,8 +107,8 @@ export const ScreenContents1 = styled.ScrollView`
   position: relative;
   bottom: 24px;
   z-index: 2;
-  min-height: ${window.height - 240 + 24}px;
-  max-height: ${window.height - 240 + 24}px;
+  min-height: ${window.height - 300 + 24}px;
+  max-height: ${window.height - 300 + 24}px;
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
   background-color: white;
@@ -100,6 +116,7 @@ export const ScreenContents1 = styled.ScrollView`
   flex-direction: column;
   margin-bottom: 50px;
 `;
+
 
 export const globalStyles = StyleSheet.create({
   circleContainer: {

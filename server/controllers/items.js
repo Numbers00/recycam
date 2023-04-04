@@ -2,7 +2,7 @@ const _ = require('lodash');
 
 const ItemsRouter = require('express').Router();
 
-const { queryResults, userExtractor } = require('../utils/multer.js');
+const { queryResults, nonBlockingUserExtractor, userExtractor } = require('../utils/middleware.js');
 
 const Item = require('../models/item.js');
 const Option = require('../models/option.js');
@@ -14,37 +14,42 @@ ItemsRouter.get('/', queryResults(Item), async (req, res) => {
 ItemsRouter.get('/:id', async (req, res, next) => {
   const id = req.params.id;
 
-  const item = Item.findById(id);
+  const item = await Item.findById(id).populate('options');
   if (!item)
     return res.status(404).send({ success: false, message: `Item with id: ${id} not found` });
 
   return res.send(item);
 });
 
-ItemsRouter.post('/', userExtractor, async (req, res, next) => {
+ItemsRouter.post('/', nonBlockingUserExtractor, async (req, res, next) => {
   const body = req.body;
   
-  const optionIds = body.options.map(async option => {
-    const option = new Option({
-      contributor: req.user.id,
+  try {
+    const optionIds = await Promise.all(body.options.map(async option => {
+    const newOption = new Option({
+      contributor: (req.user && Object.keys(req.user)) ? req.user.id : null,
       method: option.method,
       likers: [],
       dislikers: []
     });
-
-    const savedOption = await option.save();
-
+  
+    const savedOption = await newOption.save();
+  
     return savedOption.id;
-  });
-
+  }));
+  
   const item = new Item({
     name: body.name,
+    url: body.url,
     options: optionIds
   });
-
+  
   const savedItem = await item.save();
-
+  
   return res.send(savedItem);
+  } catch (err) {
+    return res.status(400).send({ success: false, message: err });
+  }
 });
 
 ItemsRouter.put('/:id', userExtractor, async (req, res, next) => {

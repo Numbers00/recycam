@@ -37,9 +37,9 @@ const userExtractor = async (req, res, next) => {
   }
 
   if ('id' in decodedToken && decodedToken.id)
-    req.user = User.findByid(decodedToken.id);
+    req.user = User.findById(decodedToken.id);
   else if ('email' in decodedToken && decodedToken.email)
-    req.user = User.find((user) => user.email === decodedToken.email);
+    req.user = User.findOne({ email: decodedToken.email });
   next();
 };
 
@@ -53,9 +53,9 @@ const nonBlockingUserExtractor = async (req, res, next) => {
   if (!decodedToken.id && !decodedToken.email) return next();
 
   if ('id' in decodedToken && decodedToken.id)
-    req.user = users.find((user) => user.id === decodedToken.id);
+    req.user = await User.findById(decodedToken.id);
   else if ('email' in decodedToken && decodedToken.email)
-    req.user = users.find((user) => user.email === decodedToken.email);
+    req.user = await User.findOne({ email: decodedToken.email });
   next();
 };
 
@@ -68,7 +68,7 @@ const _removeMinMax = (str) => {
   return str.replace(/[mM]in/, '').replace(/[mM]ax/, '');
 };
 
-const queryResults = (model) => {
+const queryResults = (model, isDetailed=false) => {
   return async (req, res, next) => {
     const { page, limit, sortKey = '_id', sortType = 'asc', ...options } = req.query;
 
@@ -100,6 +100,7 @@ const queryResults = (model) => {
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(Number(limit))
+        .populate(isDetailed ? 'options' : '')
         .lean();
 
       total = await model.countDocuments(query);
@@ -107,6 +108,7 @@ const queryResults = (model) => {
       filteredModel = await model
         .find(query)
         .sort(sort)
+        .populate(isDetailed ? 'options' : '')
         .lean();
 
       total = filteredModel.length;

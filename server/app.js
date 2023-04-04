@@ -30,6 +30,9 @@ mongoose
 
 app.use(middleware.requestLogger);
 
+const itemsRouter = require('./controllers/items.js');
+app.use('/api/items', itemsRouter);
+
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);
 

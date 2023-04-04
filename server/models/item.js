@@ -6,6 +6,9 @@ const itemSchema = new mongoose.Schema({
     type: String,
     required: 'the item\'s name is required'
   },
+  url: {
+    type: String  
+  },
   options: {
     type: [mongoose.Schema.Types.ObjectId],
     ref: 'Option'

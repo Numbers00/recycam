@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { Camera } from 'expo-camera';
 import * as tf from '@tensorflow/tfjs';
 import { cameraWithTensors } from '@tensorflow/tfjs-react-native';
@@ -13,6 +14,10 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+
+import ItemBox from '../common/ItemBox.js';
+
+import itemService from '../services/item.service.js';
 
 import {
   blueGreen,
@@ -34,7 +39,7 @@ const TopVideo = (props) => {
 
   const handleCameraStream = (images) => {
     let frame = 0;
-    const computeRecognitionEveryNFrames = 60;
+    const computeRecognitionEveryNFrames = 120;
     const loop = async () => {
       if (net) {
         if(frame % computeRecognitionEveryNFrames === 0){
@@ -73,7 +78,10 @@ const TopVideo = (props) => {
         <WText2>Model not loaded.</WText2>
       </View>
     );
-  } else if (['Record', 'Pause'].includes(mode)) {
+  } else if (mode === 'Record') {
+    // if (mode === 'Pause')
+    //   cameraRef.current.pausePreview();
+
     return (
       <View style={styles.videoContainer}>
         <TensorCamera
@@ -94,7 +102,7 @@ const TopVideo = (props) => {
   
   return (
     <View style={styles.videoPlaceholder}>
-      <WText2>Data Cleared, Start Recording?</WText2>
+      <WText2>Start Recording?</WText2>
     </View>
   );
 };
@@ -106,11 +114,11 @@ const TopModeBar = ({ mode, setMode }) => (
       <TouchableOpacity
         title=''
         style={styles.modeBtn}
-        onPress={() => mode !== 'Clear' ? setMode('Clear') : console.log('Already clear.')}
+        onPress={() => mode !== 'Stop' ? setMode('Stop') : console.log('Already stopped.')}
       >
-        {mode === 'Clear'
-          ? <BGText2>Clear</BGText2>
-          : <BText2>Clear</BText2>
+        {mode === 'Stop'
+          ? <BGText2>Stop</BGText2>
+          : <BText2>Stop</BText2>
         }
       </TouchableOpacity>
     </View>
@@ -126,18 +134,6 @@ const TopModeBar = ({ mode, setMode }) => (
         }
       </TouchableOpacity>
     </View>
-    <View style={styles.modeBox}>
-      <TouchableOpacity
-        title=''
-        style={styles.modeBtn}
-        onPress={() => mode !== 'Pause' ? setMode('Pause') : console.log('Already paused.')}
-      >
-        {mode === 'Pause'
-          ? <BGText2>Pause</BGText2>
-          : <BText2>Pause</BText2>
-        }
-      </TouchableOpacity>
-    </View>
   </View>
 );
 
@@ -148,10 +144,9 @@ const Record = ({ currRouteName }) => {
   const [isTfReady, setIsTfReady] = useState(false);
   const [net, setNet] = useState(null);
 
-  const [mode, setMode] = useState('Clear');
+  const [mode, setMode] = useState('Stop');
 
   const [detections, setDetections] = useState([]);
-  const [recognizables, setRecognizables] = useState([]);
   const [recyclables, setRecyclables] = useState([]);
 
   const cameraRef = useRef(null);
@@ -162,9 +157,9 @@ const Record = ({ currRouteName }) => {
       await tf.ready();
       // tf.getBackend();
       const model = await mobilenet.load({
-        version: 1,
-        alpha: 0.25,
-        inputRange: [0, 1]
+        version: 2,
+        alpha: 0.5,
+        // inputRange: [0, 1]
       });
       setNet(model);
       // console.log(model);
@@ -188,6 +183,35 @@ const Record = ({ currRouteName }) => {
     //   cameraRef.current.pausePreview();
   }, [mode]);
 
+  const getItems = async () => {
+    const processedDetections = _.flatten(detections.map(detection => detection.split(', ')));
+
+    const options = {};
+    options.name_in = processedDetections.join(',');
+    console.log('options', options);
+    await itemService
+      .getAll(options)
+      .then((items) => {
+        // setRecyclables([...recyclables, ...items]);
+        console.log('items', items);
+        setRecyclables(items);
+      })
+      .catch((err) => {
+        const formattedErr = err.response && err.response.data && err.response.data.message
+        ? err.response.data.message
+        : err;
+
+        console.log(formattedErr);
+      })
+  };
+
+  useEffect(() => {
+    // Cannot work while video is recording
+    // Thread taken up by Tensorflow
+    if (mode === 'Stop' && detections.length)
+      getItems();
+  }, [mode]);
+
   return (
     <View style={styles.recordContainer}>
       <TopVideo
@@ -207,17 +231,17 @@ const Record = ({ currRouteName }) => {
           setMode={setMode}
         />
         <View style={styles.mainContents}>
-          <View style={[globalStyles.flexRow, { marginBottom: 16 }]}>
-            <BText1 style={{ textDecorationLine: 'underline', marginRight: 24 }}>
-              recyclables: {recyclables.length}
-            </BText1>
-            <BText1 style={{ textDecorationLine: 'underline' }}>
-              non-recyclables: {recognizables.length - recyclables.length}
-            </BText1>
-          </View>
-          {detections.map((detection, index) => 
-            <Text key={index}>{detection}</Text>
+          {detections.map((detection, i) => 
+            <Text key={i} style={{ textAlign: 'center', marginBottom: i === detections.length - 1 ? 16 : 0 }}>{detection}</Text>
           )}
+          {recyclables.map(recyclable => (
+            <ItemBox
+              key={recyclable._id}
+              name={recyclable.name}
+              url={recyclable.url}
+              options={recyclable.options}
+            />
+          ))}
         </View>
       </ScreenContents1>
     </View>
@@ -243,7 +267,7 @@ const styles = StyleSheet.create({
   modeBox: {
     backgroundColor: 'transparent',
     flex: 1,
-    width: '33.33%',
+    width: '50%',
     height: '100%',
     display: 'flex',
     flexDirection: 'column',

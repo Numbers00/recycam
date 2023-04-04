@@ -87,7 +87,9 @@ const queryResults = (model, isDetailed=false) => {
       } else if (key.endsWith('_max')) {
         query[key.slice(0, -4)] = { $lte: options[key] };
       } else if (key.endsWith('_in')) {
-        query[key.slice(0, -3)] = { $in: options[key].split(',') };
+        const values = options[key].split(',');
+        const regexes = values.map(value => new RegExp(`^(?:${value}|${value}s)$`, 'i'));
+        query[key.slice(0, -3)] = { $in: regexes };
       } else if (key.endsWith('_sw')) {
         // value starts with the given letter/string
         const values = options[key].split(',');

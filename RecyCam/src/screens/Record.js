@@ -179,7 +179,6 @@ const Record = ({ currRouteName }) => {
   }, []);
 
   useEffect(() => {
-    console.log(cameraRef.current);
     if (mode === 'Record' && !hasPermission)
       (async () => {
         const { status } = await Camera.requestCameraPermissionsAsync();

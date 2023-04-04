@@ -22,6 +22,7 @@ import {
 import Footer from './src/common/Footer.js';
 import Header from './src/common/Header.js';
 
+import Database from './src/screens/Database.js';
 import Profile from './src/screens/Profile.js';
 import Record from './src/screens/Record.js';
 
@@ -118,6 +119,11 @@ const App = () => {
           <Tab.Screen
             name='Profile'
             component={Profile}
+            initialParams={{ currRouteName }}
+          />
+          <Tab.Screen
+            name='Database'
+            component={Database}
             initialParams={{ currRouteName }}
           />
         </Tab.Navigator>

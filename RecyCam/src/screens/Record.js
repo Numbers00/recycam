@@ -3,7 +3,7 @@ import * as tf from '@tensorflow/tfjs';
 import { cameraWithTensors } from '@tensorflow/tfjs-react-native';
 const mobilenet = require('@tensorflow-models/mobilenet');
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Image,
   Platform,
@@ -25,6 +25,7 @@ import {
 const TensorCamera = cameraWithTensors(Camera);
 const TopVideo = (props) => {
   const {
+    cameraRef,
     detections, setDetections,
     hasPermission, setHasPermission,
     net, setNet,
@@ -72,21 +73,28 @@ const TopVideo = (props) => {
         <WText2>Model not loaded.</WText2>
       </View>
     );
+  } else if (['Record', 'Pause'].includes(mode)) {
+    return (
+      <View style={styles.videoContainer}>
+        <TensorCamera
+          ref={cameraRef}
+          style={styles.camera} 
+          type={Camera.Constants.Type.back}
+          onReady={handleCameraStream}
+          resizeHeight={200}
+          resizeWidth={152}
+          resizeDepth={3}
+          autorender={true}
+          cameraTextureHeight={240}
+          cameraTextureWidth={240}
+        />
+      </View>
+    );
   }
-
+  
   return (
-    <View style={styles.videoContainer}>
-      <TensorCamera 
-        style={styles.camera} 
-        type={Camera.Constants.Type.back}
-        onReady={handleCameraStream}
-        resizeHeight={200}
-        resizeWidth={152}
-        resizeDepth={3}
-        autorender={true}
-        cameraTextureHeight={240}
-        cameraTextureWidth={240}
-      />
+    <View style={styles.videoPlaceholder}>
+      <WText2>Data Cleared, Start Recording?</WText2>
     </View>
   );
 };
@@ -98,7 +106,7 @@ const TopModeBar = ({ mode, setMode }) => (
       <TouchableOpacity
         title=''
         style={styles.modeBtn}
-        onPress={() => setMode('Clear')}
+        onPress={() => mode !== 'Clear' ? setMode('Clear') : console.log('Already clear.')}
       >
         {mode === 'Clear'
           ? <BGText2>Clear</BGText2>
@@ -110,7 +118,7 @@ const TopModeBar = ({ mode, setMode }) => (
       <TouchableOpacity
         title=''
         style={styles.modeBtn}
-        onPress={() => setMode('Record')}
+        onPress={() => mode !== 'Record' ? setMode('Record') : console.log('Already recording.')}
       >
         {mode === 'Record'
           ? <BGText2>Record</BGText2>
@@ -122,7 +130,7 @@ const TopModeBar = ({ mode, setMode }) => (
       <TouchableOpacity
         title=''
         style={styles.modeBtn}
-        onPress={() => setMode('Pause')}
+        onPress={() => mode !== 'Pause' ? setMode('Pause') : console.log('Already paused.')}
       >
         {mode === 'Pause'
           ? <BGText2>Pause</BGText2>
@@ -146,6 +154,8 @@ const Record = ({ currRouteName }) => {
   const [recognizables, setRecognizables] = useState([]);
   const [recyclables, setRecyclables] = useState([]);
 
+  const cameraRef = useRef(null);
+
   const load = async () => {
     try {
       // Load mobilenet.
@@ -157,7 +167,7 @@ const Record = ({ currRouteName }) => {
         inputRange: [0, 1]
       });
       setNet(model);
-      console.log(model);
+      // console.log(model);
       setIsTfReady(true);
     } catch (err) {
       console.log(err);
@@ -169,16 +179,20 @@ const Record = ({ currRouteName }) => {
   }, []);
 
   useEffect(() => {
+    console.log(cameraRef.current);
     if (mode === 'Record' && !hasPermission)
       (async () => {
         const { status } = await Camera.requestCameraPermissionsAsync();
         setHasPermission(status === 'granted');
       })();
+    else if (mode === 'Pause' && cameraRef.current)
+      cameraRef.current.pausePreview();
   }, [mode]);
 
   return (
     <View style={styles.recordContainer}>
       <TopVideo
+        cameraRef={cameraRef}
         detections={detections}
         setDetections={setDetections}
         hasPermission={hasPermission}

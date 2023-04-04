@@ -7,7 +7,7 @@ const { queryResults, nonBlockingUserExtractor, userExtractor } = require('../ut
 const Item = require('../models/item.js');
 const Option = require('../models/option.js');
 
-ItemsRouter.get('/', queryResults(Item), async (req, res) => {
+ItemsRouter.get('/', queryResults(Item, true), async (req, res) => {
   return res.send(res.queryResults);
 });
 

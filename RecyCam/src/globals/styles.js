@@ -97,7 +97,7 @@ export const T2TextInput = styled.TextInput`
   border-radius: 4px;
   font-size: 14px;
   color: black;
-  padding-left: 64px;
+  padding-left: 72px;
   padding-top: 0;
   margin-top: 0;
 `;

@@ -10,6 +10,8 @@ import {
   View
 } from 'react-native';
 
+import itemService from '../services/item.service.js';
+
 import {
   blueGreen,
   BText1,
@@ -18,7 +20,6 @@ import {
   ScreenContents2, T2TextInputContainer, T2TextInputLeft,
   globalStyles,
 } from '../globals/styles.js';
-
 import styled from 'styled-components/native';
 
 const TopSearchContainer = (props) => {
@@ -57,7 +58,7 @@ const TopModeBar = ({ mode, setMode }) => (
         }
       </TouchableOpacity>
     </View>
-    <View style={styles.modeBox}>
+    {/* <View style={styles.modeBox}>
       <TouchableOpacity
         title=''
         style={styles.modeBtn}
@@ -68,7 +69,7 @@ const TopModeBar = ({ mode, setMode }) => (
           : <BText2>Others</BText2>
         }
       </TouchableOpacity>
-    </View>
+    </View> */}
   </View>
 );
 
@@ -106,11 +107,53 @@ const TopButtons = ({ filterLetters, setFilterLetters }) => (
 const Database = ({ currRouteName }) => {
   const [filterLetters, setFilterLetters] = useState([]);
   const [mode, setMode] = useState('Recyclables');
+  const [searchName, setSearchName] = useState('');
 
   const [recyclables, setRecyclables] = useState([]);
-  const [others, setOthers] = useState([]);
+  // const [others, setOthers] = useState([]);
 
-  const [searchName, setSearchName] = useState('');
+  const [page, setPage] = useState(1);
+
+  const getItems = async () => {
+    const options = {
+      page: page,
+      limit: 6
+    };
+    if (filterLetters) options.name_sw = filterLetters.join(',');
+    if (searchName) options.q = searchName;
+    console.log('options', options);
+    await itemService
+      .getAll(options)
+      .then((res) => {
+        // console.log('items', items);
+        setRecyclables([...recyclables, ...res.results]);
+        setPage(page + 1);
+      })
+      .catch((err) => {
+        const formattedErr = err.response && err.response.data && err.response.data.message
+        ? err.response.data.message
+        : err;
+
+        console.log(formattedErr);
+      })
+  };
+
+  useEffect(() => {
+    getItems();
+  }, []);
+
+  const handleScroll = (e) => {
+    const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+    const paddingToBottom = 20;
+    if (
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - paddingToBottom
+    ) {
+      getItems();
+    }
+  };
+
+  console.log('recyclables', recyclables.length);
 
   return (
     <View style={styles.databaseContainer}>
@@ -127,9 +170,13 @@ const Database = ({ currRouteName }) => {
           filterLetters={filterLetters}
           setFilterLetters={setFilterLetters}
         />
-        <View style={styles.mainContents}>
+        <ScrollView
+          style={styles.mainContents}
+          onScroll={handleScroll}
+          scrollEventThrottle={16} // set this to control the rate of onScroll events
+        >
           
-        </View>
+        </ScrollView>
       </ScreenContents2>
     </View>
   );
@@ -157,7 +204,7 @@ const styles = StyleSheet.create({
   modeBox: {
     backgroundColor: 'transparent',
     flex: 1,
-    width: '50%',
+    width: '100%',
     height: '100%',
     display: 'flex',
     flexDirection: 'column',

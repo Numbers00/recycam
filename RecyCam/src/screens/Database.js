@@ -10,6 +10,8 @@ import {
   View
 } from 'react-native';
 
+import ItemBox from '../common/ItemBox.js';
+
 import itemService from '../services/item.service.js';
 
 import {
@@ -78,6 +80,7 @@ const TopButtonsContainer = styled.ScrollView.attrs({ horizontal: true })`
   height: 44px;
   display: flex;
   flex-direction: row;
+  margin-bottom: 16px;
 `;
 
 const TopButton = styled.TouchableHighlight`
@@ -175,7 +178,14 @@ const Database = ({ currRouteName }) => {
           onScroll={handleScroll}
           scrollEventThrottle={16} // set this to control the rate of onScroll events
         >
-          
+          {recyclables.map(recyclable => (
+            <ItemBox
+              key={recyclable._id}
+              name={recyclable.name}
+              url={recyclable.url}
+              options={recyclable.options}
+            />
+          ))}
         </ScrollView>
       </ScreenContents2>
     </View>

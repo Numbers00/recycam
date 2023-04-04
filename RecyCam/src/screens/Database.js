@@ -26,7 +26,7 @@ import styled from 'styled-components/native';
 
 const TopSearchContainer = (props) => {
   const {
-    searchName, setSearchName
+    searchName, handleSearchNameChange
   } = props;
 
   return (
@@ -36,7 +36,7 @@ const TopSearchContainer = (props) => {
           <BText2>Search</BText2>
         </T2TextInputLeft>
         <T2TextInput
-          onChangeText={text => setSearchName(text)}
+          onChangeText={text => handleSearchNameChange(text)}
           value={searchName}
           placeholder='Search for an item'
         />
@@ -90,15 +90,18 @@ const TopButton = styled.TouchableHighlight`
   padding: 0 8px;
 `;
 
-const TopButtons = ({ filterLetters, setFilterLetters }) => (
+const TopButtons = ({ filterLetters, handleFilterLettersChange }) => (
   <TopButtonsContainer>
     {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((letter, i) => (
       <View key={i} style={[styles.buttonOuterLayout, { marginLeft: i === 0 ? 32 : 0, marginRight: i === 25 ? 32 : 16 }]}>
         <TopButton
           style={[globalStyles.flexRow, { backgroundColor: filterLetters.includes(letter) ? blueGreen : 'lightgray' }]}
-          onPress={() => filterLetters.includes(letter) ? setFilterLetters(filterLetters.filter(l => l !== letter)) : setFilterLetters([...filterLetters, letter])}
+          onPress={() => filterLetters.includes(letter) ? handleFilterLettersChange(filterLetters.filter(l => l !== letter)) : handleFilterLettersChange([...filterLetters, letter])}
         >
-          <BText2>{letter}</BText2>
+          {filterLetters.includes(letter)
+            ? <WText2>{letter}</WText2>
+            : <BText2>{letter}</BText2>
+          }
         </TopButton>
       </View>
       ))
@@ -113,24 +116,32 @@ const Database = ({ currRouteName }) => {
   const [searchName, setSearchName] = useState('');
 
   const [recyclables, setRecyclables] = useState([]);
+  const [totalRecyclables, setTotalRecyclables] = useState(0);
   // const [others, setOthers] = useState([]);
 
   const [page, setPage] = useState(1);
+  const [shouldReset, setShouldReset] = useState(false);
 
   const getItems = async () => {
     const options = {
       page: page,
-      limit: 6
+      limit: 12
     };
     if (filterLetters) options.name_sw = filterLetters.join(',');
-    if (searchName) options.q = searchName;
+    if (searchName) options.name_search = searchName;
     console.log('options', options);
     await itemService
       .getAll(options)
       .then((res) => {
-        // console.log('items', items);
-        setRecyclables([...recyclables, ...res.results]);
-        setPage(page + 1);
+        if (shouldReset) {
+          setRecyclables([...res.results]);
+          setPage(1);
+          setShouldReset(false);
+        } else {
+          setRecyclables([...recyclables, ...res.results]);
+          setPage(page + 1);
+        }
+        setTotalRecyclables(res.total);
       })
       .catch((err) => {
         const formattedErr = err.response && err.response.data && err.response.data.message
@@ -142,16 +153,31 @@ const Database = ({ currRouteName }) => {
   };
 
   useEffect(() => {
+    if (shouldReset) {
+      setRecyclables([]);
+      setPage(1);
+    }
     getItems();
-  }, []);
+  }, [filterLetters, searchName]);
+
+  const handleFilterLettersChange = (newFilters) => {
+    setShouldReset(true);
+    setFilterLetters(newFilters);
+  };
+  
+  const handleSearchNameChange = (text) => {
+    setShouldReset(true);
+    setSearchName(text);
+  };
 
   const handleScroll = (e) => {
     const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
-    const paddingToBottom = 20;
+    const paddingToBottom = 60;
     if (
       layoutMeasurement.height + contentOffset.y >=
       contentSize.height - paddingToBottom
     ) {
+      setShouldReset(false);
       getItems();
     }
   };
@@ -162,21 +188,22 @@ const Database = ({ currRouteName }) => {
     <View style={styles.databaseContainer}>
       <TopSearchContainer
         searchName={searchName}
-        setSearchName={setSearchName}
+        handleSearchNameChange={handleSearchNameChange}
       />
-      <ScreenContents2>
+      <ScreenContents2
+        onScroll={handleScroll}
+        scrollEventThrottle={16} // set this to control the rate of onScroll events
+      >
         <TopModeBar
           mode={mode}
           setMode={setMode}
         />
         <TopButtons
           filterLetters={filterLetters}
-          setFilterLetters={setFilterLetters}
+          handleFilterLettersChange={handleFilterLettersChange}
         />
         <ScrollView
           style={styles.mainContents}
-          onScroll={handleScroll}
-          scrollEventThrottle={16} // set this to control the rate of onScroll events
         >
           {recyclables.map(recyclable => (
             <ItemBox
@@ -186,6 +213,12 @@ const Database = ({ currRouteName }) => {
               options={recyclable.options}
             />
           ))}
+          <BText2 style={{ textAlign: 'center', marginTop: 16, marginBottom: 128 }}>
+            {totalRecyclables > recyclables.length
+              ? `Showing ${recyclables.length} of ${totalRecyclables} relevant items, loading more...`
+              : `Showing all ${recyclables.length} relevant items`
+            }
+          </BText2>
         </ScrollView>
       </ScreenContents2>
     </View>

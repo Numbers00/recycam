@@ -78,7 +78,10 @@ const queryResults = (model, isDetailed=false) => {
     const query = {};
     for (const key in options) {
       if (key === 'q') {
+        // does not work because of lack of index
         query.$text = { $search: options[key] };
+      } else if (key.endsWith('_search')) {
+        query[key.slice(0, -7)] = { $regex: new RegExp(options[key], 'i') };
       } else if (key.endsWith('_min')) {
         query[key.slice(0, -4)] = { $gte: options[key] };
       } else if (key.endsWith('_max')) {

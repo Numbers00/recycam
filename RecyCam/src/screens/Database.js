@@ -129,7 +129,6 @@ const Database = ({ currRouteName }) => {
     };
     if (filterLetters) options.name_sw = filterLetters.join(',');
     if (searchName) options.name_search = searchName;
-    console.log('options', options);
     await itemService
       .getAll(options)
       .then((res) => {

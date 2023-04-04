@@ -1,0 +1,42 @@
+name: node-server
+
+workflows:
+  main:
+    jobs:
+      build:
+        name: Build
+        executor: node16.15
+        steps:
+          - checkout
+          - run:
+              name: Install Dependencies
+              command: npm install
+          - run:
+              name: Build
+              command: npm run build
+          - persist_to_workspace:
+              root: .
+              paths:
+                - .
+          - persist_to_workspace:
+              root: .
+              paths:
+                - node_modules
+
+      deploy:
+        name: Deploy
+        requires:
+          - build
+        executor: node16.15
+        steps:
+          - attach_workspace:
+              at: .
+          - run:
+              name: Start Server
+              command: npm start
+              background: true
+          - expose_port:
+              port: 3000
+          - run:
+              name: Verify Server
+              command: curl http://localhost:3001

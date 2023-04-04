@@ -56,8 +56,35 @@ ItemsRouter.put('/:id', userExtractor, async (req, res, next) => {
     return res.status(404).send({ success: false, message: `Item with id: ${id} not found` });
 
   const optionIds = body.options.map(async option => {
-    if (option)
+    if (item.optionIds.includes(option.id)) {
+      await Option.findByIdAndUpdate(
+        option.id,
+        option,
+        { new: true, runValidators: true, context: 'query' }
+      );
+
+      return option.id;
+    }
+    else {
+      const newOption = new Option({
+        contributor: req.user.id,
+        method: option.method,
+        likers: [],
+        dislikers: []
+      });
+
+      const savedOption = await newOption.save();
+
+      return savedOption.id;
+    }
   });
+
+  await Item.findByIdAndUpdate(
+    id,
+    { ...item, options: optionIds },
+    { new: true, runValidators: true, context: 'query' }
+  );
+  response.status(200).end();
 });
 
 module.exports = ItemsRouter;

@@ -1,6 +1,12 @@
+import { Camera } from 'expo-camera';
+import * as tf from '@tensorflow/tfjs';
+import { cameraWithTensors } from '@tensorflow/tfjs-react-native';
+const mobilenet = require('@tensorflow-models/mobilenet');
+
 import { useEffect, useState } from 'react';
 import {
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,10 +17,79 @@ import {
 import {
   blueGreen,
   BText1,
-  BText2, BGText2,
+  BText2, BGText2, WText2,
   ScreenContents1,
   globalStyles
 } from '../globals/styles.js';
+
+const TensorCamera = cameraWithTensors(Camera);
+const TopVideo = (props) => {
+  const {
+    detections, setDetections,
+    hasPermission, setHasPermission,
+    net, setNet,
+    mode, setMode
+  } = props;
+
+  const handleCameraStream = (images) => {
+    let frame = 0;
+    const computeRecognitionEveryNFrames = 60;
+    const loop = async () => {
+      if (net) {
+        if(frame % computeRecognitionEveryNFrames === 0){
+          const nextImageTensor = images.next().value;
+          if (nextImageTensor) {
+            const objects = await net.classify(nextImageTensor);
+            if(objects && objects.length > 0){
+              setDetections(objects.map(object => object.className));
+            }
+            tf.dispose([nextImageTensor]);
+          }
+        }
+        frame += 1;
+        frame = frame % computeRecognitionEveryNFrames;
+      }
+      requestAnimationFrame(loop);
+    }
+    loop();
+  };
+
+  if (hasPermission === null) {
+    return (
+      <View style={styles.videoPlaceholder}>
+        <WText2>Start Recording?</WText2>
+      </View>
+    );
+  } else if (hasPermission === false) {
+    return (
+      <View style={styles.videoPlaceholder}>
+        <WText2>Camera access has not been granted.</WText2>
+      </View>
+    );
+  } else if (!net) {
+    return (
+      <View style={styles.videoPlaceholder}>
+        <WText2>Model not loaded.</WText2>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.videoContainer}>
+      <TensorCamera 
+        style={styles.camera} 
+        type={Camera.Constants.Type.back}
+        onReady={handleCameraStream}
+        resizeHeight={200}
+        resizeWidth={152}
+        resizeDepth={3}
+        autorender={true}
+        cameraTextureHeight={240}
+        cameraTextureWidth={240}
+      />
+    </View>
+  );
+};
 
 
 const TopModeBar = ({ mode, setMode }) => (
@@ -58,19 +133,66 @@ const TopModeBar = ({ mode, setMode }) => (
   </View>
 );
 
-
+// Code for Tensorflow adapted from and thanks to
+// https://www.bam.tech/article/how-to-recognize-real-time-object-in-reactnative-for-dummies
 const Record = ({ currRouteName }) => {
+  const [hasPermission, setHasPermission] = useState(null);
+  const [isTfReady, setIsTfReady] = useState(false);
+  const [net, setNet] = useState(null);
+
   const [mode, setMode] = useState('Clear');
 
+  const [detections, setDetections] = useState([]);
   const [recognizables, setRecognizables] = useState([]);
   const [recyclables, setRecyclables] = useState([]);
 
+  const load = async () => {
+    try {
+      // Load mobilenet.
+      await tf.ready();
+      // tf.getBackend();
+      const model = await mobilenet.load({
+        version: 1,
+        alpha: 0.25,
+        inputRange: [0, 1]
+      });
+      setNet(model);
+      console.log(model);
+      setIsTfReady(true);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  useEffect(() => {
+    if (mode === 'Record' && !hasPermission)
+      (async () => {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        setHasPermission(status === 'granted');
+      })();
+  }, [mode]);
+
   return (
     <View style={styles.recordContainer}>
-      <View style={styles.videoPlaceholder}>
-      </View>
+      <TopVideo
+        detections={detections}
+        setDetections={setDetections}
+        hasPermission={hasPermission}
+        setHasPermission={setHasPermission}
+        net={net}
+        setNet={setNet}
+        mode={mode}
+        setMode={setMode}
+      />
       <ScreenContents1>
-        <TopModeBar />
+        <TopModeBar
+          mode={mode}
+          setMode={setMode}
+        />
         <View style={styles.mainContents}>
           <View style={[globalStyles.flexRow, { marginBottom: 16 }]}>
             <BText1 style={{ textDecorationLine: 'underline', marginRight: 24 }}>
@@ -80,6 +202,9 @@ const Record = ({ currRouteName }) => {
               non-recyclables: {recognizables.length - recognizables.length}
             </BText1>
           </View>
+          {detections.map((detection, index) => 
+            <Text key={index}>{detection}</Text>
+          )}
         </View>
       </ScreenContents1>
     </View>
@@ -87,6 +212,9 @@ const Record = ({ currRouteName }) => {
 };
 
 const styles = StyleSheet.create({
+  camera: {
+    flex: 1
+  },
   mainContents: {
     display: 'flex',
     flexDirection: 'column',
@@ -121,12 +249,22 @@ const styles = StyleSheet.create({
     position: 'relative',
     flex: 1,
   },
+  videoContainer: {
+    position: 'relative',
+    zIndex: 1,
+    width: '100%',
+    height: 240
+  },
   videoPlaceholder: {
     position: 'relative',
     zIndex: 1,
     backgroundColor: 'gray',
     width: '100%',
-    height: 240
+    height: 240,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 });
 

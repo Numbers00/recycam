@@ -1,5 +1,3 @@
-import RNPickerSelect from 'react-native-picker-select';
-
 import {
   Dimensions,
   Image,

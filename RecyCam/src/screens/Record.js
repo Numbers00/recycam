@@ -185,8 +185,8 @@ const Record = ({ currRouteName }) => {
         const { status } = await Camera.requestCameraPermissionsAsync();
         setHasPermission(status === 'granted');
       })();
-    else if (mode === 'Pause' && cameraRef.current)
-      cameraRef.current.pausePreview();
+    // else if (mode === 'Pause' && cameraRef.current)
+    //   cameraRef.current.pausePreview();
   }, [mode]);
 
   return (
@@ -213,7 +213,7 @@ const Record = ({ currRouteName }) => {
               recyclables: {recyclables.length}
             </BText1>
             <BText1 style={{ textDecorationLine: 'underline' }}>
-              non-recyclables: {recognizables.length - recognizables.length}
+              non-recyclables: {recognizables.length - recyclables.length}
             </BText1>
           </View>
           {detections.map((detection, index) => 

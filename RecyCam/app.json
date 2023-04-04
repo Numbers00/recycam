@@ -32,6 +32,14 @@
       "eas": {
         "projectId": "4a13133b-371e-47e1-8767-ae28210edf10"
       }
-    }
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow RecyCam to access your camera."
+        }
+      ]
+    ]
   }
 }

@@ -181,8 +181,6 @@ const Database = ({ currRouteName }) => {
     }
   };
 
-  console.log('recyclables', recyclables.length);
-
   return (
     <View style={styles.databaseContainer}>
       <TopSearchContainer

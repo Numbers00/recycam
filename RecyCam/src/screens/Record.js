@@ -157,10 +157,11 @@ const Record = ({ currRouteName }) => {
       await tf.ready();
       // tf.getBackend();
       const model = await mobilenet.load({
-        version: 2,
-        alpha: 0.5,
+        version: 1,
+        alpha: 0.25,
         // inputRange: [0, 1]
       });
+      // console.log('model', model);
       setNet(model);
       // console.log(model);
       setIsTfReady(true);
@@ -184,7 +185,7 @@ const Record = ({ currRouteName }) => {
   }, [mode]);
 
   const getItems = async () => {
-    const processedDetections = _.flatten(detections.map(detection => detection.split(', ')));
+    const processedDetections = _.flatten(detections.map(detection => detection.split(/,\s|\s/)));
 
     const options = {};
     options.name_in = processedDetections.join(',');
@@ -202,12 +203,13 @@ const Record = ({ currRouteName }) => {
         : err;
 
         console.log(formattedErr);
-      })
+      });
   };
 
   useEffect(() => {
     // Cannot work while video is recording
     // Thread taken up by Tensorflow
+    console.log('mode', mode);
     if (mode === 'Stop' && detections.length)
       getItems();
   }, [mode]);

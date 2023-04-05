@@ -5,12 +5,21 @@ import servicesHelper from '../helpers/services.helper.js';
 
 // const SERVER_IP_ADDR = process.env.REACT_NATIVE_PACKAGER_HOSTNAME.slice(0, -1);
 // const SERVER_IP_ADDR = '192.168.0.160';
-const SERVER_IP_ADDR = '192.168.1.2';
+// const SERVER_IP_ADDR = '192.168.1.2';
+
+// const BASE_URL = (() => {
+//   // http://<wifi ip address>:3001/api/users works on actual android device
+//   if (Platform.OS === 'android') return `http://${SERVER_IP_ADDR}:${SERVER_PORT || 3001}/api/items`;
+//   return `http://${SERVER_IP_ADDR}:${SERVER_PORT || 3001}/api/items`;
+// })();
+
+// To connect to server deployed on cyclic.sh
+const SERVER_ADDR = 'https://dull-tan-gharial-tie.cyclic.app';
 
 const BASE_URL = (() => {
-  // http://<wifi ip address>:3002/api/users works on actual android device
-  if (Platform.OS === 'android') return `http://${SERVER_IP_ADDR}:${SERVER_PORT || 3001}/api/items`;
-  return `http://${SERVER_IP_ADDR}:${SERVER_PORT || 3001}/api/items`;
+  // http://<wifi ip address>:3001/api/users works on actual android device
+  if (Platform.OS === 'android') return `${SERVER_ADDR}/api/items`;
+  return `${SERVER_ADDR}/api/items`;
 })();
 
 console.log('BASE_URL: ', BASE_URL);

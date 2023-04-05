@@ -15,10 +15,10 @@ import {
 } from '../globals/styles.js';
 import styled from 'styled-components/native';
 
-const ListItem = ({ method }) => (
+const ListItem = ({ expanded, method }) => (
   <View style={styles.listItem}>
     <Text style={styles.bulletPoint}>{'\u2022'}</Text>
-    <BText1 numberOfLines={2}>{method}</BText1>
+    <BText1 numberOfLines={expanded ? undefined : 2}>{method}</BText1>
   </View>
 );
 
@@ -55,11 +55,11 @@ const ItemBox = ({ name, url, options }) => {
             <BText2>{name}</BText2>
             {expanded ? (
               options.map((option, i) => (
-                <ListItem key={i} method={option.method} />
+                <ListItem key={i} expanded={expanded} method={option.method} />
               ))
             ) : (
               truncatedOptions.map((option, i) => (
-                <ListItem key={i} method={option.method} />
+                <ListItem key={i} expanded={expanded} method={option.method} />
               ))
             )}
           </View>
@@ -95,7 +95,6 @@ const styles = StyleSheet.create({
   },
   listItem: {
     flexDirection: 'row',
-    alignItems: 'center',
     paddingRight: 16
   },
 });

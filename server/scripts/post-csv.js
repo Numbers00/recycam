@@ -39,15 +39,15 @@ const postCsv = async (filepath) => {
 
   // Loop through each object and post to API
   // Works but sample is already inserted
-  // for (let i = 0; i < data.length; i++) {
-  //   const item = data[i];
-  //   try {
-  //     const response = await axios.post('http://localhost:3001/api/items', item);
-  //     console.log(`Item ${item.name} (${i}) was successfully posted with response ${response.status}`);
-  //   } catch (err) {
-  //     console.error(`Error posting item ${i}: ${err}`);
-  //   }
-  // }
+  for (let i = 0; i < data.length; i++) {
+    const item = data[i];
+    try {
+      const response = await axios.post('http://localhost:3001/api/items', item);
+      console.log(`Item ${item.name} (${i}) was successfully posted with response ${response.status}`);
+    } catch (err) {
+      console.error(`Error posting item ${i}: ${err}`);
+    }
+  }
 
   console.log(`All (${data.length}) have been processed!`);
 };

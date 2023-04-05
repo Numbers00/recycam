@@ -22,7 +22,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.numbers00.RecyCam"
+      "package": "com.numbers00.RecyCam",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "jscEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -40,6 +45,9 @@
           "cameraPermission": "Allow RecyCam to access your camera."
         }
       ]
-    ]
+    ],
+    "updates": {
+      "url": "https://u.expo.dev/4a13133b-371e-47e1-8767-ae28210edf10"
+    }
   }
 }
